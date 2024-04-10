@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ASCIIShader</title>
+
+    <script src="https://unpkg.com/mithril/mithril.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
+
+    <style>
+        body {
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="h-100 w-100 bg-black-90 flex items-center justify-between">
+
+<div class="flex items-center justify-center flex-grow-1">
+    <div class="dib white" id="grid">
+
+    </div>
+</div>
+
+<div class="bg-white h-100 flex-shrink-0 pv3 ph4 overflow-auto" style="width: 600px; max-width: 600px;">
+    <div class="w-100 h-100" id="controls"></div>
+</div>
+
+<script>
+    const grid = document.getElementById('grid');
+
+    const CHAR_PRESETS = {
+        'Simple': ' .,:;i1tfLCG08@'.split(''),
+        'Basic Blocks': '▁\t▂\t▃\t▄\t▅\t▆\t▇\t█\t▉'.split('\t'),
+        'Extended Blocks': '🬀\t🬁\t🬂\t🬃\t🬄\t🬅\t🬆\t🬇\t🬈\t🬉\t🬊\t🬋\t🬌\t🬍\t🬎\t🬏\t🬐\t🬑\t🬒\t🬓\t🬔\t🬕\t🬖\t🬗\t🬘\t🬙\t🬚\t🬛\t🬜\t🬝\t🬞\t🬟\t🬠\t🬡\t🬢\t🬣\t🬤\t🬥\t🬦\t🬧\t🬨\t🬩\t🬪\t🬫\t🬬\t🬭\t🬮\t🬯\t🬰\t🬱\t🬲\t🬳\t🬴\t🬵\t🬶\t🬷\t🬸\t🬹\t🬺\t🬻'.split('\t'),
+    }
+
+    const SHADER_PRESETS = {
+        'Sine Rainbow': `(dt, x, y) => {
+    const chars = CHAR_PRESETS['Extended Blocks'];
+
+    // Use sine wave to animate the cells
+    const t = (Date.now() / 1000) + (x / STATE.width) + (y / STATE.height);
+    const index = Math.floor(Math.sin(t) * chars.length / 2 + chars.length / 2);
+
+    // Color based on position
+    const r = Math.floor((Math.sin(t) + 1) * 127);
+    const g = Math.floor((Math.cos(t) + 1) * 127);
+    const b = Math.floor((Math.sin(t + Math.PI) + 1) * 127);
+
+    return {
+        char: chars[index],
+        color: 'rgb(' + r + ',' + g + ',' + b + ')'
+    }
+};`,
+        'Simple Sine': `(dt, x, y) => {
+    const chars = CHAR_PRESETS['Simple'];
+
+    // Use sine wave to animate the cells
+    const t = (Date.now() / 1000) + (x / STATE.width) + (y / STATE.height);
+    const index = Math.floor(Math.sin(t) * chars.length / 2 + chars.length / 2);
+
+    return {
+        char: chars[index],
+        color: 'white'
+    }
+};`,
+        'Mandelbrot-Like': `(dt, x, y) => {
+    const mandelbrot = (cReal, cImag, maxIter = 255) => {
+      let zReal = 0;
+      let zImag = 0;
+      let n = 0;
+
+      while (n < maxIter && (zReal * zReal + zImag * zImag) <= 4) {
+        zReal = zReal * zReal - zImag * zImag + cReal;
+        zImag = 2 * zReal * zImag + cImag;
+        n++;
+      }
+
+      return n;
+    }
+
+  const chars = CHAR_PRESETS['Extended Blocks'];
+
+  // Fractal-inspired coordinates for dynamic patterns
+  const cx = Math.sin((Date.now() / 1000) + 4 * Math.PI * x / STATE.width) * Math.cos((Date.now() / 1000) + 4 * Math.PI * y / STATE.height);
+  const cy = Math.sin((Date.now() / 1000) + 4 * Math.PI * y / STATE.height) * Math.cos((Date.now() / 1000) + 4 * Math.PI * x / STATE.width);
+
+  // Escape time algorithm for Mandelbrot-like patterns
+  const iterations = mandelbrot(cx + 0.4, cy);
+
+  // Character selection based on fractal depth
+  const index = Math.floor(iterations / 255 * chars.length);
+
+  // Color mapping based on fractal iterations and coordinates
+  const r = Math.floor(255 * (0.5 + 0.5 * Math.sin(4 * iterations + cx)));
+  const g = Math.floor(255 * (0.5 + 0.5 * Math.cos(2 * iterations + cy)));
+  const b = Math.floor(255 * (0.3 + 0.7 * Math.sin(8 * iterations)));
+
+  return {
+    char: chars[index % chars.length],
+    color: 'rgb(' + r + ',' + g + ',' + b + ')'
+  };
+};`,
+        'Mandelbrot-Like 2': `(dt, x, y) => {
+    const mandelbrot = (cReal, cImag, maxIter = 255) => {
+      let zReal = 0;
+      let zImag = 0;
+      let n = 0;
+
+      while (n < maxIter && (zReal * zReal + zImag * zImag) <= 4) {
+        zReal = zReal * zReal - zImag * zImag + cReal;
+        zImag = 2 * zReal * zImag + cImag;
+        n++;
+      }
+
+      return n;
+    }
+
+  const chars = CHAR_PRESETS['Extended Blocks'];
+  const time = (Date.now() / 1000);
+
+  const cx = Math.sin(time + 4 * Math.PI * x / STATE.width) * Math.cos(time + 4 * Math.PI * y / STATE.height);
+  const cy = Math.sin(time + 4 * Math.PI * y / STATE.height) * Math.cos(time + 4 * Math.PI * x / STATE.width);
+
+  const iterations = mandelbrot(cx + 0.4, cy - Math.sin(time));
+
+  const index = Math.floor(iterations / 10 * chars.length);
+
+  const r = Math.sin(cx + iterations) * 255
+  const g = Math.tan(cx + iterations) * 255
+  const b = Math.cos(cx + iterations) * 255
+
+  return {
+    char: chars[index % chars.length],
+    color: 'rgb(' + r + ',' + g + ',' + b + ')'
+  };
+};`
+    }
+
+    const STATE = {
+        width: 90,
+        height: 40,
+        grid: {},
+        shaderFn: SHADER_PRESETS['Sine Rainbow'],
+    };
+
+    window.STATE = STATE;
+    window.CHAR_PRESETS = CHAR_PRESETS;
+
+    // Read shaderFn from base64 encoded URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const shaderFn = urlParams.get('shaderFn');
+    if (shaderFn) {
+        STATE.shaderFn = atob(shaderFn);
+    }
+
+    // Initialize shader function
+    let onCell = eval(STATE.shaderFn);
+
+    /**
+     * Main loop
+     */
+    let lastTime = Date.now();
+    setInterval(() => {
+        requestAnimationFrame(() => {
+            const now = Date.now();
+            const dt = now - lastTime;
+            lastTime = now;
+
+            let newGrid = ``;
+            for (let y = 0; y < STATE.height; y++) {
+                newGrid += `<div>`;
+                for (let x = 0; x < STATE.width; x++) {
+                    const cellChange = onCell(dt, x, y);
+                    newGrid += `<span style="color: ${cellChange.color}">${cellChange.char}</span>`;
+                }
+                newGrid += `</div>`;
+            }
+            grid.innerHTML = newGrid;
+        })
+    }, 1000 / 30);
+
+    /**
+     * Controls using Mithril.js
+     */
+    m.mount(document.getElementById('controls'), {
+        view: () => {
+            return m('div.flex.flex-column.w-100.h-100', m('div.mr4', [
+                    m('h2', '<#ASCIIShader'),
+                    m('div.lh-copy', 'A simple ASCII "shader" playground. Use the shader function to animate the cells.'),
+                    m('h2', 'Controls'),
+                    m('div.mb2', [
+                        m('label.dib.w3', 'Width'),
+                        m('input', {
+                            type: 'number',
+                            value: STATE.width,
+                            oninput: (e) => {
+                                STATE.width = parseInt(e.target.value);
+                            }
+                        }),
+                    ]),
+                    m('div.mb2', [
+                        m('label.dib.w3', 'Height'),
+                        m('input', {
+                            type: 'number',
+                            value: STATE.height,
+                            oninput: (e) => {
+                                STATE.height = parseInt(e.target.value);
+                            }
+                        }),
+                    ]),
+                ]),
+                m('div.mb2', [
+                    m('h2', 'Shader'),
+                    m('textarea.f7', {
+                        rows: 40,
+                        style: 'width: 100%;',
+                        oninput: (e) => {
+                            STATE.shaderFn = e.target.value;
+                        }
+                    }, STATE.shaderFn),
+                ]),
+                m('button', {
+                    onclick: () => {
+                        onCell = eval(STATE.shaderFn);
+                    }
+                }, 'Apply Shader'),
+                m('div.mb2', [
+                    m('h2', 'Presets'),
+                    m('select', {
+                        onchange: (e) => {
+                            STATE.shaderFn = SHADER_PRESETS[e.target.value];
+                            onCell = eval(STATE.shaderFn);
+                        }
+                    }, Object.keys(SHADER_PRESETS).map((preset) => {
+                        return m('option', {value: preset}, preset);
+                    })),
+                ]),
+                m('div.mb2.pb4', [
+                    m('h2', 'Sharing'),
+                    m('div', [
+                        m('a', {
+                            href: window.location.origin + window.location.pathname + '?shaderFn=' + btoa(STATE.shaderFn)
+                        }, 'Share this shader')
+                    ]),
+                ]),
+            )
+        }
+    });
+</script>
+</body>
+</html>
