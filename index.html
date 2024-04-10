@@ -236,12 +236,22 @@
                         return m('option', {value: preset}, preset);
                     })),
                 ]),
-                m('div.mb2.pb4', [
+                m('div.mb2', [
                     m('h2', 'Sharing'),
                     m('div', [
                         m('a', {
-                            href: window.location.origin + window.location.pathname + '?shaderFn=' + btoa(STATE.shaderFn)
+                            href: window.location.origin + window.location.pathname + '?shaderFn=' + btoa(STATE.shaderFn),
+                            target: '_blank'
                         }, 'Share this shader')
+                    ]),
+                ]),
+                m('div.mb2.pb4', [
+                    m('h2', 'Source'),
+                    m('div', [
+                        m('a', {
+                            href: 'https://github.com/BigJk/ASCIIShader',
+                            target: '_blank'
+                        }, 'View the source on github')
                     ]),
                 ]),
             )
