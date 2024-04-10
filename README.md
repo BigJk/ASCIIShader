@@ -2,7 +2,7 @@
 
 ![Screenshot](./screenshot.png)
 
-ASCII art tool inspired by fragment shader.
+ASCII art tool inspired by fragment shader. [Try it yourself!](https://bigjk.github.io/ASCIIShader/)
 
 ## What it does
 
