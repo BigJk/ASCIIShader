@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>ASCIIShader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <script src="https://unpkg.com/mithril/mithril.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/tachyons@4.12.0/css/tachyons.min.css"/>
@@ -13,15 +14,15 @@
         }
     </style>
 </head>
-<body class="h-100 w-100 bg-black-90 flex items-center justify-between">
+<body class="h-100 w-100 bg-black-90 flex flex-row-ns flex-column items-center justify-between">
 
 <div class="flex items-center justify-center flex-grow-1">
-    <div class="dib white" id="grid">
+    <div class="dib white pv4" id="grid">
 
     </div>
 </div>
 
-<div class="bg-white h-100 flex-shrink-0 pv3 ph4 overflow-auto" style="width: 600px; max-width: 600px;">
+<div class="bg-white h-100 flex-shrink-0 pv3 ph4 overflow-auto mw6-ns">
     <div class="w-100 h-100" id="controls"></div>
 </div>
 
@@ -140,9 +141,14 @@
     const STATE = {
         width: 90,
         height: 40,
-        grid: {},
         shaderFn: SHADER_PRESETS['Sine Rainbow'],
     };
+
+    // On mobile set width lower
+    if (window.innerWidth < 600) {
+        STATE.width = 45;
+        STATE.height = 30;
+    }
 
     window.STATE = STATE;
     window.CHAR_PRESETS = CHAR_PRESETS;
